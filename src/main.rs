@@ -11,6 +11,9 @@ fn main() {
 	let mut app = app::App::new().unwrap();
 	let mut cli = cli::Cli::new(&mut app);
 
+	// Register default commands
+	cli.register_all();
+
 	cli.register_command(cli::Command::new(
 		"test2".to_owned(),
 		"Test2 command".to_owned(),

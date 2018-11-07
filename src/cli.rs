@@ -44,27 +44,33 @@ pub struct Cli<'a> {
 }
 
 
+fn command_help<'a, I>(commands: I)
+where I: Iterator<Item=&'a Command>
+{
+	for command in commands {
+		println!("{} - {}", command.command, command.description);
+	}
+}
+
 
 impl<'a> Cli<'a> {
 	/// Creates a Cli application that controls a LibreTuner app.
 	pub fn new(app: &mut App) -> Cli {
 		let mut commands = Vec::new();
 
-		// Register internal help command
-
-
-		commands.push(Command::new("help".to_owned(), "This command".to_owned(),
-			|context| {
-				for command in context.commands.iter() {
-					println!("{} - {}", command.command, command.description);
-				}
-			},
-		));
-
 		Cli {
 			app,
 			commands,
 		}
+	}
+
+	pub fn register_all(&mut self) {
+		// Internal help command
+		self.commands.push(Command::new("help".to_owned(), "This command".to_owned(),
+			|context| {
+				command_help(context.commands.iter());
+			},
+		));
 	}
 
 	pub fn register_command(&mut self, command: Command) {
