@@ -14,25 +14,20 @@ fn main() {
 	// Register default commands
 	cli.register_all();
 
-	cli.register_command(cli::Command::new(
-		"test2".to_owned(),
-		"Test2 command".to_owned(),
-		|_| println!("Ran test2"),
-	));
-
 	println!("LibreTuner  Copyright (C) 2018  LibreTuner Team
 This program comes with ABSOLUTELY NO WARRANTY; for details type `show w'.
 This is free software, and you are welcome to redistribute it
 under certain conditions; type `show c' for details.");
     let mut rl = Editor::<()>::new();
     loop {
+    	println!();
         let readline = rl.readline(">> ");
         match readline {
             Ok(line) => {
                 rl.add_history_entry(line.as_ref());
                 
                 let parts = Shlex::new(&line);
-                cli.process(parts);
+                cli.process(parts).unwrap();
             },
             Err(ReadlineError::Interrupted) => {
                 println!("Terminated");
@@ -48,8 +43,6 @@ under certain conditions; type `show c' for details.");
             }
         }
     }
-
-	cli.process(vec!["test2", "command"].into_iter()).unwrap();
 }
 
 /*#[macro_use]

@@ -5,8 +5,9 @@ authors = ["Altenius <jacobjm18@gmail.com>"]
 edition = "2018"
 
 [features]
-default = ["cli"]
+default = ["cli", "socketcan"]
 cli = ["rustyline", "clap", "directories", "conrod", "find_folder", "shlex"]
+socketcan = []
 
 [dependencies]
 tuneutils = {path = "../tuneutils", features = ["socketcan"]}

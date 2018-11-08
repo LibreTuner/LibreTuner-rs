@@ -16,9 +16,9 @@ use tuneutils::{
 pub struct App {
 	pub config_dir: PathBuf,
     pub data_dir: PathBuf,
-    pub avail_links: RefCell<Vec<Box<link::DataLinkEntry>>>,
+    pub avail_links: Vec<Box<link::DataLinkEntry>>,
     pub definitions: Definitions,
-    pub roms: RefCell<rom::RomManager>,
+    pub roms: rom::RomManager,
     pub tunes: rom::tune::TuneManager,
 }
 
@@ -50,10 +50,18 @@ impl App {
         Ok(App {
             config_dir,
             data_dir,
-            avail_links: RefCell::new(link::discover_datalinks()),
+            avail_links: link::discover_datalinks(),
             definitions,
-            roms: RefCell::new(roms),
+            roms,
             tunes,
         })
+	}
+
+	/// Loads a datalink by id or returns Error::InvalidDatalink
+	pub fn get_datalink(&self, id: usize) -> Result<Box<link::DataLink>> {
+		if id >= self.avail_links.len() {
+			return Err(Error::InvalidDatalink);
+		}
+		Ok(self.avail_links[id].create()?)
 	}
 }
