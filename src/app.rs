@@ -10,7 +10,8 @@ use directories::ProjectDirs;
 use tuneutils::{
 	protocols::{can, isotp, uds::{UdsInterface, UdsIsotp}},
 	definition::Definitions,
-	link, rom,
+	link::{self, PlatformLink}, rom,
+    download::DownloadCallback,
 };
 
 pub struct App {
@@ -59,9 +60,42 @@ impl App {
 
 	/// Loads a datalink by id or returns Error::InvalidDatalink
 	pub fn get_datalink(&self, id: usize) -> Result<Box<link::DataLink>> {
+        println!("Getting link {}", id);
 		if id >= self.avail_links.len() {
 			return Err(Error::InvalidDatalink);
 		}
+        println!("Getting and creating....");
 		Ok(self.avail_links[id].create()?)
 	}
+
+    /// Creates a platform link from a datalink ID and platform ID
+    pub fn create_platform_link(&self, datalink: usize, platform: &str) -> Result<PlatformLink> {
+        let datalink = self.get_datalink(datalink);
+        let datalink = datalink?;
+        let platform = self.definitions.find(platform).ok_or(Error::InvalidPlatform)?;
+        Ok(PlatformLink::new(datalink, platform.clone()))
+    }
+
+    /// Returns a list of all platform definitions in the format (name, id)
+    pub fn list_platforms(&self) -> Vec<(&str, &str)> {
+        let mut platforms = Vec::new();
+
+        for platform in &self.definitions.definitions {
+            platforms.push((platform.name.as_str(), platform.id.as_str()));
+        }
+
+        platforms
+    }
+
+    pub fn download(&mut self, link: &PlatformLink, id: &str, name: &str, callback: &DownloadCallback) -> Result<()> {
+        let downloader = link.downloader().ok_or(Error::DownloadUnsupported)?;
+        let response = downloader.download(callback)?;
+
+        let model = link.platform.identify(&response.data).ok_or(Error::UnknownModel)?;
+        let rom = self.roms.new_rom(name.to_owned(), id.to_owned(), link.platform.clone(), model.clone(), response.data);
+        self.roms.save_meta().unwrap();
+        rom.save().unwrap();
+
+        Ok(())
+    }
 }
